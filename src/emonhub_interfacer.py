@@ -13,6 +13,7 @@ import datetime
 import logging
 import socket
 import select
+import json
 
 import emonhub_coder as ehc
 
@@ -686,6 +687,73 @@ class EmonHubSocketInterfacer(EmonHubInterfacer):
                 return self._process_frame(f, t)
             else:
                 return self._process_frame(f)
+
+"""class EmonHubSocketInterfacer
+
+Monitors a socket for data, typically from ethernet link
+
+"""
+
+
+class EmonHubSRFInterfacer(EmonHubInterfacer):
+
+    def __init__(self, name, port_nb=50140):
+        """Initialize Interfacer
+
+        port_nb (string): port number on which to open the socket
+
+        """
+ 
+        # Initialization
+        super(EmonHubSocketInterfacer, self).__init__(name)
+
+        # Open socket
+        self._socket = self._open_socket(port_nb)
+
+        # Initialize RX buffer for socket
+        self._sock_rx_buf = ''
+
+    def close(self):
+        """Close socket."""
+        
+        # Close socket
+        if self._socket is not None:
+            self._log.debug('Closing socket')
+            self._socket.close()
+
+    def read(self):
+        """Read data from socket and process if complete line received.
+
+        Return data as a list: [NodeID, val1, val2]
+        
+        """
+        
+        # Check if data received
+        ready_to_read, ready_to_write, in_error = \
+            select.select([self._socket], [], [], 0)
+
+        # If data received, add it to socket RX buffer
+        if self._socket in ready_to_read:
+
+            # Accept connection
+            conn, addr = self._socket.accept()
+            
+            # Read data
+            self._sock_rx_buf = self._sock_rx_buf + conn.recv(1024*8)
+            
+            # Close connection
+            conn.close()
+
+        # If there is at least one complete frame in the buffer
+        if '}' in self._sock_rx_buf:
+            # Process and return first frame in buffer:
+            data, self._sock_rx_buf = self._sock_rx_buf.split('}', 1)
+            pydata = json.loads(data)
+            if pydata['data'][0] == 'AWAKE' or pydata['data'][0] == 'SLEEPING':
+                return
+            if pydata['data'][0].startswith('PWRA'):
+                f = '4 ' + pydata['data'][0][4:]
+            return self._process_frame(f)
 
 """class EmonHubInterfacerInitError
 
