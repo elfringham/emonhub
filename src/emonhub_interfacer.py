@@ -705,7 +705,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         """
  
         # Initialization
-        super(EmonHubSocketInterfacer, self).__init__(name)
+        super(EmonHubSRFInterfacer, self).__init__(name)
 
         # Open socket
         self._socket = self._open_socket(port_nb)
