@@ -730,7 +730,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
 
         # Check if data received
         try:
-            data = self._socket.recv(1024*8)
+            data, address = self._socket.recvfrom(1024*8)
             self._sock_rx_buf = self._sock_rx_buf + data
         except socket.error as e:
             return
