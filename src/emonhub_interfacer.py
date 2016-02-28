@@ -715,7 +715,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
 
     def close(self):
         """Close socket."""
-        
+
         # Close socket
         if self._socket is not None:
             self._log.debug('Closing socket')
@@ -725,24 +725,15 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         """Read data from socket and process if complete line received.
 
         Return data as a list: [NodeID, val1, val2]
-        
+
         """
-        
+
         # Check if data received
-        ready_to_read, ready_to_write, in_error = \
-            select.select([self._socket], [], [], 0)
-
-        # If data received, add it to socket RX buffer
-        if self._socket in ready_to_read:
-
-            # Accept connection
-            conn, addr = self._socket.accept()
-            
-            # Read data
-            self._sock_rx_buf = self._sock_rx_buf + conn.recv(1024*8)
-            
-            # Close connection
-            conn.close()
+        try:
+            data = self._socket.recv(1024*8)
+            self._sock_rx_buf = self._sock_rx_buf + data
+        except socket.error as e:
+            return
 
         # If there is at least one complete frame in the buffer
         if '}' in self._sock_rx_buf:
@@ -754,6 +745,28 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
             if pydata['data'][0].startswith('PWRA'):
                 f = '4 ' + pydata['data'][0][4:]
             return self._process_frame(f)
+
+    def _open_socket(self, port_nb):
+        """Open a socket
+
+        port_nb (string): port number on which to open the socket
+
+        """
+
+        self._log.debug('Opening socket on port %s', port_nb)
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            s.setblocking(0)
+            s.bind(('', int(port_nb)))
+        except socket.error as e:
+            self._log.error(e)
+            raise EmonHubInterfacerInitError('Could not open port %s' %
+                                           port_nb)
+        else:
+            return s
 
 """class EmonHubInterfacerInitError
 
