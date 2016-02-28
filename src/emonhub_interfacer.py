@@ -732,6 +732,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         try:
             data, address = self._socket.recvfrom(1024*8)
             self._sock_rx_buf = self._sock_rx_buf + data
+            self._log.debug(data)
         except socket.error as e:
             return
 
@@ -739,12 +740,11 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         if '}' in self._sock_rx_buf:
             # Process and return first frame in buffer:
             data, self._sock_rx_buf = self._sock_rx_buf.split('}', 1)
+            data += '}'
             pydata = json.loads(data)
-            if pydata['data'][0] == 'AWAKE' or pydata['data'][0] == 'SLEEPING':
-                return
             if pydata['data'][0].startswith('PWRA'):
                 f = '4 ' + pydata['data'][0][4:]
-            return self._process_frame(f)
+                return self._process_frame(f)
 
     def _open_socket(self, port_nb):
         """Open a socket
