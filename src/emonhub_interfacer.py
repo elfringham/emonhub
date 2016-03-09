@@ -778,7 +778,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
                 setting = self._defaults[key]
             if key in self._settings and self._settings[key] == setting:
                 continue
-            elif key == 'nodeid' and str(setting).len() = 2:
+            elif key == 'nodeid' and str(setting).len() == 2:
                 pass
             else:
                 self._log.warning("'%s' is not a valid setting for %s: %s" % (str(setting), self.name, key))
