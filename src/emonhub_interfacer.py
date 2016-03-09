@@ -1,7 +1,7 @@
 """
 
   This code is released under the GNU Affero General Public License.
-  
+
   OpenEnergyMonitor project:
   http://openenergymonitor.org
 
@@ -19,7 +19,7 @@ import emonhub_coder as ehc
 
 """class EmonHubInterfacer
 
-Monitors a data source. 
+Monitors a data source.
 
 This almost empty class is meant to be inherited by subclasses specific to
 their data source.
@@ -30,7 +30,7 @@ their data source.
 class EmonHubInterfacer(object):
 
     def __init__(self, name):
-        
+
         # Initialize logger
         self._log = logging.getLogger("EmonHub")
 
@@ -48,7 +48,7 @@ class EmonHubInterfacer(object):
 
         # Initialize interval timer's "started at" timestamp
         self._interval_timestamp = 0
-        
+
     def close(self):
         """Close socket."""
         pass
@@ -57,7 +57,7 @@ class EmonHubInterfacer(object):
         """Read data from socket and process if complete line received.
 
         Return data as a list: [NodeID, val1, val2]
-        
+
         """
         pass
 
@@ -68,9 +68,9 @@ class EmonHubInterfacer(object):
 
         This function splits the string into numbers and check its validity.
 
-        'NodeID val1 val2 ...' is the generic data format. If the source uses 
+        'NodeID val1 val2 ...' is the generic data format. If the source uses
         a different format, override this method.
-        
+
         Return data as a list: [NodeID, val1, val2]
 
         """
@@ -91,7 +91,7 @@ class EmonHubInterfacer(object):
 
         # Log data
         self._log.debug(str(ref) + " NEW FRAME : " + str(timestamp) + " " + frame)
-        
+
         # Get an array out of the space separated string
         frame = frame.strip().split(' ')
 
@@ -123,7 +123,7 @@ class EmonHubInterfacer(object):
         if 'pause' in self._settings \
                 and str(self._settings['pause']).lower() in ['all', 'out']:
             return
-        
+
         return frame
 
     def _validate_frame(self, ref, received):
@@ -135,7 +135,7 @@ class EmonHubInterfacer(object):
         Returns True if data frame passes tests.
 
         """
-        
+
         # Discard if frame not of the form [node, val1, ...]
         # with number of elements at least 2
         if len(received) < 2:
@@ -148,7 +148,7 @@ class EmonHubInterfacer(object):
         except Exception:
             self._log.warning(str(ref) + " Discarded RX frame 'non-numerical content' : " + str(received))
             return False
-            
+
         # Discard if first value is not a valid node id
         n = float(received[0])
         if n % 1 != 0 or n < 0 or n > 31:
@@ -237,7 +237,7 @@ class EmonHubInterfacer(object):
         # Insert node ID before data
         decoded.insert(0, int(node))
         return decoded
-    
+
     def set(self, **kwargs):
         """Set configuration parameters.
 
@@ -249,7 +249,7 @@ class EmonHubInterfacer(object):
             'pause' = in   pauses the input only, no input read performed
             'pause' = out  pauses output only, input is read, processed but not posted to buffer
             'pause' = off  pause is off and Interfacer is fully operational (default)
-        
+
         """
 
         for key, setting in self._defaults.iteritems():
@@ -274,11 +274,11 @@ class EmonHubInterfacer(object):
             self._log.debug("Setting " + self.name + " " + key + ": " + str(setting))
 
     def run(self):
-        """Placeholder for background tasks. 
-        
-        Allows subclasses to specify actions that need to be done on a 
+        """Placeholder for background tasks.
+
+        Allows subclasses to specify actions that need to be done on a
         regular basis. This should be called in main loop by instantiater.
-        
+
         """
         pass
 
@@ -302,7 +302,7 @@ class EmonHubInterfacer(object):
                                            com_port)
         else:
             return s
-    
+
     def _open_socket(self, port_nb):
         """Open a socket
 
@@ -311,7 +311,7 @@ class EmonHubInterfacer(object):
         """
 
         self._log.debug('Opening socket on port %s', port_nb)
-        
+
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind(('', int(port_nb)))
@@ -338,19 +338,19 @@ class EmonHubSerialInterfacer(EmonHubInterfacer):
         com_port (string): path to COM port
 
         """
-        
+
         # Initialization
         super(EmonHubSerialInterfacer, self).__init__(name)
 
         # Open serial port
         self._ser = self._open_serial_port(com_port, com_baud)
-        
+
         # Initialize RX buffer
         self._rx_buf = ''
 
     def close(self):
         """Close serial port"""
-        
+
         # Close serial port
         if self._ser is not None:
             self._log.debug("Closing serial port")
@@ -360,12 +360,12 @@ class EmonHubSerialInterfacer(EmonHubInterfacer):
         """Read data from serial port and process if complete line received.
 
         Return data as a list: [NodeID, val1, val2]
-        
+
         """
 
         # Read serial RX
         self._rx_buf = self._rx_buf + self._ser.readline()
-        
+
         # If line incomplete, exit
         if '\r\n' not in self._rx_buf:
             return
@@ -375,7 +375,7 @@ class EmonHubSerialInterfacer(EmonHubInterfacer):
 
         # Reset buffer
         self._rx_buf = ''
-        
+
         # Discard empty frames
         if not f:
             self._log.warning("Discarded empty frame")
@@ -402,7 +402,7 @@ class EmonHubJeeInterfacer(EmonHubSerialInterfacer):
         com_port (string): path to COM port
 
         """
-        
+
         # Initialization
         if com_baud != 0:
             super(EmonHubJeeInterfacer, self).__init__(name, com_port, com_baud)
@@ -479,7 +479,7 @@ class EmonHubJeeInterfacer(EmonHubSerialInterfacer):
 
         # Reset buffer
         self._rx_buf = ''
-        
+
         # Discard empty frames
         if not f:
             self._log.warning("Discarded empty frame")
@@ -548,7 +548,7 @@ class EmonHubJeeInterfacer(EmonHubSerialInterfacer):
         **kwargs (dict): settings to be modified. Available settings are
         'baseid', 'frequency', 'group'. Example:
         {'baseid': '15', 'frequency': '4', 'group': '210'}
-        
+
         """
 
         for key, setting in self._jee_settings.iteritems():
@@ -589,9 +589,9 @@ class EmonHubJeeInterfacer(EmonHubSerialInterfacer):
 
     def run(self):
         """Actions that need to be done on a regular basis. 
-        
+
         This should be called in main loop by instantiater.
-        
+
         """
 
         now = time.time()
@@ -602,7 +602,7 @@ class EmonHubJeeInterfacer(EmonHubSerialInterfacer):
             if now - self._interval_timestamp > interval:
                 self._send_time()
                 self._interval_timestamp = now
-    
+
     def _send_time(self):
         """Send time over radio link to synchronize emonGLCD
 
@@ -635,7 +635,7 @@ class EmonHubSocketInterfacer(EmonHubInterfacer):
         port_nb (string): port number on which to open the socket
 
         """
- 
+
         # Initialization
         super(EmonHubSocketInterfacer, self).__init__(name)
 
@@ -647,7 +647,7 @@ class EmonHubSocketInterfacer(EmonHubInterfacer):
 
     def close(self):
         """Close socket."""
-        
+
         # Close socket
         if self._socket is not None:
             self._log.debug('Closing socket')
@@ -657,9 +657,9 @@ class EmonHubSocketInterfacer(EmonHubInterfacer):
         """Read data from socket and process if complete line received.
 
         Return data as a list: [NodeID, val1, val2]
-        
+
         """
-        
+
         # Check if data received
         ready_to_read, ready_to_write, in_error = \
             select.select([self._socket], [], [], 0)
@@ -669,10 +669,10 @@ class EmonHubSocketInterfacer(EmonHubInterfacer):
 
             # Accept connection
             conn, addr = self._socket.accept()
-            
+
             # Read data
             self._sock_rx_buf = self._sock_rx_buf + conn.recv(1024)
-            
+
             # Close connection
             conn.close()
 
@@ -703,7 +703,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         port_nb (string): port number on which to open the socket
 
         """
- 
+
         # Initialization
         super(EmonHubSRFInterfacer, self).__init__(name)
 
@@ -712,6 +712,7 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
 
         # Initialize RX buffer for socket
         self._sock_rx_buf = ''
+        self._temp = '0.0'
 
     def close(self):
         """Close socket."""
@@ -742,9 +743,13 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
             data, self._sock_rx_buf = self._sock_rx_buf.split('}', 1)
             data += '}'
             pydata = json.loads(data)
+            if pydata['id'] != self._settings['nodeid']:
+                return
             if pydata['data'][0].startswith('PWRA'):
-                f = '4 ' + pydata['data'][0][4:]
+                f = '4 ' + pydata['data'][0][4:] + ' ' + self._temp
                 return self._process_frame(f)
+            elif pydata['data'][0].startswith('TEMP'):
+                self._temp = pydata['data'][0][4:]
 
     def _open_socket(self, port_nb):
         """Open a socket
