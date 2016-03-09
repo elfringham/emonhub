@@ -713,6 +713,12 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         # Initialize RX buffer for socket
         self._sock_rx_buf = ''
         self._temp = '0.0'
+        self._defaults = {'nodeid': '--'}
+
+        # This line will stop the default values printing to logfile at start-up
+        # unless they have been overwritten by emonhub.conf entries
+        # comment out if diagnosing a startup value issue
+        self._settings.update(self._defaults)
 
     def close(self):
         """Close socket."""
@@ -750,6 +756,35 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
                 return self._process_frame(f)
             elif pydata['data'][0].startswith('TEMP'):
                 self._temp = pydata['data'][0][4:]
+
+    def set(self, **kwargs):
+        """Set configuration parameters.
+
+        **kwargs (dict): settings to be sent. Example:
+        {'setting_1': 'value_1', 'setting_2': 'value_2'}
+
+        pause (string): pause status
+            'pause' = all  pause Interfacer fully, nothing read, processed or posted.
+            'pause' = in   pauses the input only, no input read performed
+            'pause' = out  pauses output only, input is read, processed but not posted to buffer
+            'pause' = off  pause is off and Interfacer is fully operational (default)
+
+        """
+
+        for key, setting in self._defaults.iteritems():
+            if key in kwargs.keys():
+                setting = kwargs[key]
+            else:
+                setting = self._defaults[key]
+            if key in self._settings and self._settings[key] == setting:
+                continue
+            elif key == 'nodeid' and str(setting).len() = 2:
+                pass
+            else:
+                self._log.warning("'%s' is not a valid setting for %s: %s" % (str(setting), self.name, key))
+                continue
+            self._settings[key] = setting
+            self._log.debug("Setting " + self.name + " " + key + ": " + str(setting))
 
     def _open_socket(self, port_nb):
         """Open a socket
