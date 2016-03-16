@@ -713,6 +713,8 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
         # Initialize RX buffer for socket
         self._sock_rx_buf = ''
         self._temp = '0.0'
+        self._temp2 = '0.0'
+        self._volts = '240'
         self._defaults = {'nodeid': '--'}
 
         # This line will stop the default values printing to logfile at start-up
@@ -752,8 +754,14 @@ class EmonHubSRFInterfacer(EmonHubInterfacer):
             if pydata['id'] != self._settings['nodeid']:
                 return
             if pydata['data'][0].startswith('PWRA'):
-                f = '4 ' + pydata['data'][0][4:] + ' ' + self._temp
+                f = '4 ' + pydata['data'][0][4:] + ' ' + self._temp + ' ' + self._volts + ' ' + self._temp2
                 return self._process_frame(f)
+            elif pydata['data'][0].startswith('TPDA'):
+                self._temp = pydata['data'][0][4:]
+            elif pydata['data'][0].startswith('TPDB'):
+                self._temp2 = pydata['data'][0][4:]
+            elif pydata['data'][0].startswith('VOLT'):
+                self._volts = pydata['data'][0][4:]
             elif pydata['data'][0].startswith('TEMP'):
                 self._temp = pydata['data'][0][4:]
 
